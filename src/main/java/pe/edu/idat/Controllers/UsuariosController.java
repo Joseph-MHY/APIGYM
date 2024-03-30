@@ -4,7 +4,6 @@ package pe.edu.idat.Controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.idat.DTO.UsuarioConfiguracionDTO;
 import pe.edu.idat.DTO.UsuarioDTO;
@@ -12,7 +11,8 @@ import pe.edu.idat.DTO.UsuarioRutinaDTO;
 import pe.edu.idat.Models.UsuarioConfiguracion;
 import pe.edu.idat.Models.UsuarioRutina;
 import pe.edu.idat.Models.Usuarios;
-import pe.edu.idat.Services.UsuarioConfigService;
+import pe.edu.idat.Repositories.IUsuarioConfigurationRepo;
+import pe.edu.idat.Repositories.IUsuarioRutinaRepository;
 import pe.edu.idat.Services.UsuarioService;
 import pe.edu.idat.Utils.Constantes;
 
@@ -24,13 +24,13 @@ import java.util.*;
 public class UsuariosController {
 
     private UsuarioService usuarioService;
+    private IUsuarioConfigurationRepo iUsuarioConfigurationRepo;
+    private IUsuarioRutinaRepository iUsuarioRutinaRepository;
 
-    private UsuarioConfigService usuarioConfigService;
 
     @Autowired
-    public UsuariosController(UsuarioService usuarioService, UsuarioConfigService usuarioConfigService) {
+    public UsuariosController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
-        this.usuarioConfigService = usuarioConfigService;
     }
 
     public UsuariosController() {
@@ -90,49 +90,126 @@ public class UsuariosController {
             rutinaDTO.setRutina(rutina.getRutina().getId());
         }
 
-        // Configurar lista de configuraciones y rutinas
-        usuarioDTO.setUsuarioConfiguracions(configuracion != null ? Collections.singletonList(configuracionDTO) : Collections.emptyList());
-        usuarioDTO.setUsuarioRutina(rutina != null ? Collections.singletonList(rutinaDTO) : Collections.emptyList());
+        // Configurar configuraciones y rutinas
+        usuarioDTO.setUsuarioConfiguracions(configuracion != null ? configuracionDTO : new UsuarioConfiguracionDTO());
+        usuarioDTO.setUsuarioRutina(rutina != null ? rutinaDTO : new UsuarioRutinaDTO());
 
         return usuarioDTO;
     }
 
 
-    @PostMapping("/signup")
-    public ResponseEntity<Object> postUser(@RequestBody Usuarios usuario) {
-        try {
-            Usuarios nuevoUsuario = usuarioService.postUsuario(usuario);
-            if (nuevoUsuario != null) {
-                return ResponseEntity.accepted().body(Constantes.returnMessageAndObject(Constantes.CREATED_USER, nuevoUsuario));
-            } else {
-                return ResponseEntity.badRequest().body("El usuario no puede ser nulo");
-            }
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+    // Controlador o servicio
+    @PostMapping
+    public ResponseEntity<Object> crearUsuario(@RequestBody UsuarioDTO usuarioDTO) {
+        // Validación del DTO
+        if (!esUsuarioDTOValido(usuarioDTO)) {
+            Map<String, String> response = new HashMap<>();
+            response.put("mensaje","El usuario no es valido");
+            return ResponseEntity.badRequest().body(response);
         }
+
+        // Mapeo de DTO a entidad Usuarios
+        Usuarios usuario = mapearDTOaEntidad(usuarioDTO);
+
+        // Persistencia del usuario
+        usuarioService.postUsuario(usuario);
+        Map<String, String> response = new HashMap<>();
+        response.put("mensaje","Usuario creado correctamente");
+        response.put("Usuario", usuario.toString());
+        return ResponseEntity.ok().body(response);
+    }
+    private boolean esUsuarioDTOValido(UsuarioDTO usuarioDTO) {
+        // Verificar que el objeto no sea nulo
+        if (usuarioDTO == null) {
+            return false;
+        }
+
+        // Verificar campos obligatorios
+        if (usuarioDTO.getCorreo() == null || usuarioDTO.getCorreo().isEmpty()) {
+            return false;
+        }
+        if (usuarioDTO.getNombreUsuario() == null || usuarioDTO.getNombreUsuario().isEmpty()) {
+            return false;
+        }
+        if (usuarioDTO.getApellidoUsuario() == null || usuarioDTO.getApellidoUsuario().isEmpty()) {
+            return false;
+        }
+        if (usuarioDTO.getPassword() == null || usuarioDTO.getPassword().isEmpty()) {
+            return false;
+        }
+        if (usuarioDTO.getPalabraClave() == null || usuarioDTO.getPalabraClave().isEmpty()) {
+            return false;
+        }
+        if (usuarioDTO.getDni() == null || usuarioDTO.getDni().isEmpty()) {
+            return false;
+        }
+        if (usuarioDTO.getNumCelular() == null || usuarioDTO.getNumCelular().isEmpty()) {
+            return false;
+        }
+        if (usuarioDTO.getAltura() == null) {
+            return false;
+        }
+        if (usuarioDTO.getPeso() == null) {
+            return false;
+        }
+        if (usuarioDTO.getFechaRegistro() == null || usuarioDTO.getFechaRegistro().isEmpty()) {
+            return false;
+        }
+        if (usuarioDTO.getFechaNacimiento() == null || usuarioDTO.getFechaNacimiento().isEmpty()) {
+            return false;
+        }
+        if (usuarioDTO.getTipoUsuario() == null) {
+            return false;
+        }
+        if (usuarioDTO.getUsuarioConfiguracions() == null) {
+            return false;
+        }
+        if (usuarioDTO.getUsuarioRutina() == null) {
+            return false;
+        }
+
+        // Si todos los campos obligatorios están llenos, retorna true
+        return true;
     }
 
-    /*
-    @PutMapping
-    public ResponseEntity<Object> putUser(@RequestParam("correo") String correo, @RequestBody Usuarios userUpdate) {
-        try {
-            if (correo == null || userUpdate == null) {
-                return ResponseEntity.badRequest().body("El correo y el cuerpo de la solicitud no pueden ser nulos.");
-            }
+    // Método para mapear el DTO a la entidad Usuarios
+    private Usuarios mapearDTOaEntidad(UsuarioDTO usuarioDTO) {
+        Usuarios usuario = new Usuarios();
+        usuario.setCorreo(usuarioDTO.getCorreo());
+        usuario.setNombreUsuario(usuarioDTO.getNombreUsuario());
+        usuario.setApellidoUsuario(usuarioDTO.getApellidoUsuario());
+        usuario.setPassword(usuarioDTO.getPassword());
+        usuario.setPalabraClave(usuarioDTO.getPalabraClave());
+        usuario.setDni(usuarioDTO.getDni());
+        usuario.setNumCelular(usuarioDTO.getNumCelular());
+        usuario.setAltura(usuarioDTO.getAltura());
+        usuario.setPeso(usuarioDTO.getPeso());
+        usuario.setFechaRegistro(usuarioDTO.getFechaRegistro());
+        usuario.setFechaNacimiento(usuarioDTO.getFechaNacimiento());
+        usuario.setTipoUsuario(usuarioDTO.getTipoUsuario());
 
-            Usuarios usuarioActualizado = usuarioService.putUsuario(correo, userUpdate);
-            if (usuarioActualizado != null) {
-                return ResponseEntity.accepted().body(Constantes.returnMessageAndObject(Constantes.UPDATE_USER, usuarioActualizado));
-            } else {
-                return ResponseEntity.badRequest().body(Constantes.returnMessage("No se pudo encontrar el usuario para actualizar."));
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body("Error al actualizar el usuario: " + ex.getMessage());
+        // Mapear configuración a entidad si existe
+        UsuarioConfiguracionDTO configuracionDTO = usuarioDTO.getUsuarioConfiguracions();
+        if (configuracionDTO != null) {
+            UsuarioConfiguracion configuracion = new UsuarioConfiguracion();
+            configuracion.setIdUsuarioConfiguracion(configuracionDTO.getIdUsuarioConfiguracion());
+            // Puedes mapear otros campos aquí
+            usuario.setUsuarioConfiguracions(configuracion);
         }
+
+        // Mapear rutina a entidad si existe
+        UsuarioRutinaDTO rutinaDTO = usuarioDTO.getUsuarioRutina();
+        if (rutinaDTO != null) {
+            UsuarioRutina rutina = new UsuarioRutina();
+            rutina.setIdUsuarioRutina(rutinaDTO.getIdUsuarioRutina());
+            // Puedes mapear otros campos aquí
+            usuario.setUsuarioRutinas(rutina);
+        }
+        System.out.println(usuario);
+        return usuario;
     }
-    */
+
     @DeleteMapping
     public ResponseEntity<Object> deleteUser(@RequestParam("correo") String correo) {
         try {
