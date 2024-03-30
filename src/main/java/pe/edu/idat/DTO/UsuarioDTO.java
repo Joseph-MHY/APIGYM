@@ -24,6 +24,6 @@ public class UsuarioDTO {
     private String fechaRegistro;
     private String fechaNacimiento;
     private TipoUsuario tipoUsuario;
-    private Collection<UsuarioConfiguracionDTO> usuarioConfiguracions;
-    private Collection<UsuarioRutinaDTO> usuarioRutina;
+    private UsuarioConfiguracionDTO usuarioConfiguracions;
+    private UsuarioRutinaDTO usuarioRutina;
 }

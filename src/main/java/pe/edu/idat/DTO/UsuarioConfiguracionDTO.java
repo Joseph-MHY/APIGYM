@@ -16,5 +16,7 @@ public class UsuarioConfiguracionDTO {
 
     private Integer idUsuarioConfiguracion;
 
+    private String correo;
+
     private Integer configuracionEntrenamiento;
 }
