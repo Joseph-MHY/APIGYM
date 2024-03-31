@@ -11,5 +11,5 @@ public class UsuarioRutinaDTO {
 
     private Integer idUsuarioRutina;
 
-    private Integer rutina;
+    private RutinaDTO rutina;
 }
