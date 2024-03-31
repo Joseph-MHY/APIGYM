@@ -24,6 +24,11 @@ public class UsuarioDTO {
     private String fechaRegistro;
     private String fechaNacimiento;
     private TipoUsuario tipoUsuario;
+
+    //se usan para indicar la configuracion y Rutina del usuario en el metodo POST
+    private Integer idconfig;
+    private Integer idRutina;
+
     private UsuarioConfiguracionDTO usuarioConfiguracions;
     private UsuarioRutinaDTO usuarioRutina;
 }

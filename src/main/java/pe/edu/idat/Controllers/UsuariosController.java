@@ -7,11 +7,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.idat.DTO.*;
 import pe.edu.idat.Models.*;
+import pe.edu.idat.Repositories.IConfigTrainingRepository;
+import pe.edu.idat.Repositories.IRutinaRepository;
 import pe.edu.idat.Repositories.IUsuarioConfigurationRepo;
 import pe.edu.idat.Repositories.IUsuarioRutinaRepository;
 import pe.edu.idat.Services.UsuarioService;
-import pe.edu.idat.Utils.Constantes;
+import pe.edu.idat.Utils.TipoUsuario;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -20,159 +24,33 @@ import java.util.*;
 public class UsuariosController {
 
     private UsuarioService usuarioService;
-    private IUsuarioConfigurationRepo iUsuarioConfigurationRepo;
-    private IUsuarioRutinaRepository iUsuarioRutinaRepository;
 
     @Autowired
-    public UsuariosController(UsuarioService usuarioService, IUsuarioConfigurationRepo iUsuarioConfigurationRepo, IUsuarioRutinaRepository iUsuarioRutinaRepository) {
+    public UsuariosController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
-        this.iUsuarioConfigurationRepo = iUsuarioConfigurationRepo;
-        this.iUsuarioRutinaRepository = iUsuarioRutinaRepository;
     }
 
     public UsuariosController() {
     }
 
     @GetMapping
-    public ResponseEntity<List<UsuarioDTO>> obtenerUsuarios() {
-        Iterable<Usuarios> usuarios = usuarioService.getUsuarios();
-        List<UsuarioDTO> usuariosDTO = new ArrayList<>();
-        for (Usuarios usuario : usuarios) {
-            UsuarioDTO usuarioDTO = convertirAUsuarioDTO(usuario);
-            usuariosDTO.add(usuarioDTO);
-        }
+    public ResponseEntity<List<UsuarioDTO>> getUsuarios() {
+        List<UsuarioDTO> usuariosDTO = usuarioService.obtenerUsuarios();
         return ResponseEntity.ok(usuariosDTO);
     }
 
     @GetMapping("/{correo}")
-    public ResponseEntity<UsuarioDTO> obtenerUsuario(@PathVariable String correo) {
-        Optional<Usuarios> optionalUsuario = usuarioService.getUsuarioByEmail(correo);
-        Usuarios usuario = optionalUsuario.orElse(null);
-        System.out.println("OptionarUsuario: "+optionalUsuario.get().getUsuarioRutinas().getRutina().toString().toString());
-        if (usuario == null) {
+    public ResponseEntity<UsuarioDTO> getUsuario(@PathVariable String correo) {
+        UsuarioDTO usuarioDTO = usuarioService.obtenerUsuarioPorCorreo(correo);
+        if (usuarioDTO == null) {
             return ResponseEntity.notFound().build();
         }
-        UsuarioDTO usuarioDTO = convertirAUsuarioDTO(usuario);
         return ResponseEntity.ok(usuarioDTO);
     }
 
-
-    private UsuarioDTO convertirAUsuarioDTO(Usuarios usuario) {
-        UsuarioDTO usuarioDTO = new UsuarioDTO();
-        usuarioDTO.setCorreo(usuario.getCorreo());
-        usuarioDTO.setNombreUsuario(usuario.getNombreUsuario());
-        usuarioDTO.setApellidoUsuario(usuario.getApellidoUsuario());
-        usuarioDTO.setPassword(usuario.getPassword());
-        usuarioDTO.setPalabraClave(usuario.getPalabraClave());
-        usuarioDTO.setDni(usuario.getDni());
-        usuarioDTO.setNumCelular(usuario.getNumCelular());
-        usuarioDTO.setAltura(usuario.getAltura());
-        usuarioDTO.setPeso(usuario.getPeso());
-        usuarioDTO.setFechaRegistro(usuario.getFechaRegistro());
-        usuarioDTO.setFechaNacimiento(usuario.getFechaNacimiento());
-        usuarioDTO.setTipoUsuario(usuario.getTipoUsuario());
-
-        // Convertir configuración a DTO si existe
-        UsuarioConfiguracionDTO configuracionDTO = new UsuarioConfiguracionDTO();
-        UsuarioConfiguracion configuracion = usuario.getUsuarioConfiguracions();
-        if (configuracion != null) {
-            configuracionDTO.setIdUsuarioConfiguracion(configuracion.getIdUsuarioConfiguracion());
-            configuracionDTO.setConfiguracionEntrenamiento(convertirAConfiguracionEntrenamientoDTO(configuracion.getConfiguracionEntrenamiento()));
-        }
-
-        // Convertir rutina a DTO si existe
-        UsuarioRutinaDTO rutinaDTO = new UsuarioRutinaDTO();
-        UsuarioRutina rutina = usuario.getUsuarioRutinas();
-        if (rutina != null) {
-            rutinaDTO.setIdUsuarioRutina(rutina.getIdUsuarioRutina());
-            rutinaDTO.setRutina(convertirARutinaDTO(rutina.getRutina()));
-        }
-
-        // Configurar configuraciones y rutinas
-        usuarioDTO.setUsuarioConfiguracions(configuracion != null ? configuracionDTO : new UsuarioConfiguracionDTO());
-        usuarioDTO.setUsuarioRutina(rutina != null ? rutinaDTO : new UsuarioRutinaDTO());
-        System.out.println("convertidor a configuracion: "+convertirAConfiguracionEntrenamiento(configuracionDTO.getConfiguracionEntrenamiento()));
-        System.out.println("convertidor a rutina: "+convertirARutina(rutinaDTO.getRutina()));
-        System.out.println(convertirARutina(rutinaDTO.getRutina()).getClass());
-        System.out.println(usuarioDTO);
-        return usuarioDTO;
-    }
-
-    private ConfiguracionEntrenamientoDTO convertirAConfiguracionEntrenamientoDTO(ConfiguracionEntrenamiento configuracion) {
-        ConfiguracionEntrenamientoDTO configuracionDTO = new ConfiguracionEntrenamientoDTO();
-        configuracionDTO.setIdconfig(configuracion.getIdconfig());
-        configuracionDTO.setDiasEntrenamiento(configuracion.getDiasEntrenamiento());
-        configuracionDTO.setDiaInicioEntrenamiento(configuracion.getDiaInicioEntrenamiento());
-        return configuracionDTO;
-    }
-
-    private RutinaDTO convertirARutinaDTO(Rutina rutina) {
-        RutinaDTO rutinaDTO = new RutinaDTO();
-        rutinaDTO.setId(rutina.getId());
-        rutinaDTO.setNombreRutina(rutina.getNombreRutina());
-        rutinaDTO.setDescripcion(rutina.getDescripcion());
-        return rutinaDTO;
-    }
-
-    private ConfiguracionEntrenamiento convertirAConfiguracionEntrenamiento(ConfiguracionEntrenamientoDTO configuraciondto) {
-        ConfiguracionEntrenamiento configuracion = new ConfiguracionEntrenamiento();
-        configuracion.setIdconfig(configuraciondto.getIdconfig());
-        configuracion.setDiasEntrenamiento(configuraciondto.getDiasEntrenamiento());
-        configuracion.setDiaInicioEntrenamiento(configuraciondto.getDiaInicioEntrenamiento());
-        return configuracion;
-    }
-
-    private Rutina convertirARutina(RutinaDTO rutinaDTO){
-        Rutina rutina = new Rutina();
-        rutina.setId(rutinaDTO.getId());
-        rutina.setNombreRutina(rutinaDTO.getNombreRutina());
-        rutina.setDescripcion(rutinaDTO.getDescripcion());
-        return rutina;
-    }
-
-    @PostMapping("/usuarioSolo")
-    public ResponseEntity<Object> crearUsuarioSolo(@RequestBody UsuarioDTO usuarioDTO) {
-        // Validación del DTO y creación del usuario
-        Usuarios usuario = new Usuarios();
-        usuario.setCorreo(usuarioDTO.getCorreo());
-        usuario.setApellidoUsuario(usuarioDTO.getApellidoUsuario());
-        usuario.setNombreUsuario(usuarioDTO.getNombreUsuario());
-        usuario.setPassword(usuarioDTO.getPassword());
-        usuario.setPalabraClave(usuarioDTO.getPalabraClave());
-        usuario.setNumCelular(usuarioDTO.getNumCelular());
-        usuario.setAltura(usuarioDTO.getAltura());
-        usuario.setPeso(usuarioDTO.getPeso());
-        usuario.setDni(usuarioDTO.getDni());
-        usuario.setFechaRegistro(usuarioDTO.getFechaRegistro());
-        usuario.setFechaNacimiento(usuarioDTO.getFechaNacimiento());
-        usuario.setTipoUsuario(usuarioDTO.getTipoUsuario());
-
-        ConfiguracionEntrenamiento configuracionEntrenamiento = new ConfiguracionEntrenamiento();
-        configuracionEntrenamiento.setIdconfig(usuarioDTO.getUsuarioConfiguracions().getConfiguracionEntrenamiento().getIdconfig());
-        configuracionEntrenamiento.setDiasEntrenamiento(usuarioDTO.getUsuarioConfiguracions().getConfiguracionEntrenamiento().getDiasEntrenamiento());
-        configuracionEntrenamiento.setDiaInicioEntrenamiento(usuarioDTO.getUsuarioConfiguracions().getConfiguracionEntrenamiento().getDiaInicioEntrenamiento());
-
-        Rutina rutina = new Rutina();
-        rutina.setId(usuarioDTO.getUsuarioRutina().getRutina().getId());
-        rutina.setNombreRutina(usuarioDTO.getUsuarioRutina().getRutina().getNombreRutina());
-        rutina.setDescripcion(usuarioDTO.getUsuarioRutina().getRutina().getDescripcion());
-
-        usuarioService.postUsuario(usuario);
-        UsuarioConfiguracion usuarioConfiguracion = new UsuarioConfiguracion();
-        usuarioConfiguracion.setUsuario(usuario);
-        usuarioConfiguracion.setConfiguracionEntrenamiento(configuracionEntrenamiento);
-
-        UsuarioRutina usuarioRutina = new UsuarioRutina();
-        usuarioRutina.setUsuario(usuario);
-        usuarioRutina.setRutina(rutina);
-
-        iUsuarioConfigurationRepo.save(usuarioConfiguracion);
-        iUsuarioRutinaRepository.save(usuarioRutina);
-        // Retornar respuesta exitosa
-        Map<String, Object> response = new HashMap<>();
-        response.put("mensaje", "Usuario creado correctamente");
-        response.put("Usuario", usuario);
-        return ResponseEntity.ok().body(response);
+    @PostMapping
+    public ResponseEntity<Object> postUsuario(@RequestBody UsuarioDTO usuarioDTO) {
+        return usuarioService.postUsuario(usuarioDTO);
     }
 
     @PostMapping("/login")
