@@ -12,6 +12,7 @@ import pe.edu.idat.Repositories.IRutinaRepository;
 import pe.edu.idat.Repositories.IUsuarioConfigurationRepo;
 import pe.edu.idat.Repositories.IUsuarioRutinaRepository;
 import pe.edu.idat.Services.UsuarioService;
+import pe.edu.idat.Utils.Constantes;
 import pe.edu.idat.Utils.TipoUsuario;
 
 import java.time.LocalDate;
@@ -72,6 +73,24 @@ public class UsuariosController {
         } catch (Exception ex) {
             ex.printStackTrace();
             return ResponseEntity.badRequest().body(Collections.singletonMap("mensaje", "Error al procesar la solicitud de inicio de sesión: " + ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<Object> postUser(@RequestBody Usuarios usuario) {
+        try {
+            if(usuario == null){
+                return ResponseEntity.badRequest().body("El usuario no puede ser nulo");
+            }
+            Usuarios nuevoUsuario = usuarioService.postearUsuario(usuario);
+            if(nuevoUsuario != null){
+                return ResponseEntity.accepted().body(Constantes.returnMessageAndObject(Constantes.CREATED_USER, nuevoUsuario));
+            } else {
+                return ResponseEntity.badRequest().body("Error al crear usuario");
+            }
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 

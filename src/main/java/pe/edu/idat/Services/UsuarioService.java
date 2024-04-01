@@ -232,6 +232,14 @@ public class UsuarioService {
         return false; // Si el usuario no existe
     }
 
+    public Usuarios postearUsuario(Usuarios usuario){
+        if (usuario != null ) {
+            usuario.setTipoUsuario(TipoUsuario.Usuario);
+            return IUsuarioRepository.save(usuario);
+        } else {
+            throw new IllegalArgumentException("Tipo de usuario no válido: " + usuario.getTipoUsuario());
+        }
+    }
 
     public Usuarios actualizarPerfil(String correo, Usuarios usuarioModificado) {
 

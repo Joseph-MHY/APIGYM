@@ -31,6 +31,9 @@ public class Rutina {
     @OneToMany(mappedBy = "rutina")
     private List<UsuarioRutina> usuarioRutinas;
 
+    @OneToMany(mappedBy = "rutina")
+    private List<EjercicioRutina> ejercicioRutinas;
+
     public Rutina(String nombreRutina, String descripcion) {
         this.nombreRutina = nombreRutina;
         this.descripcion = descripcion;

@@ -15,12 +15,12 @@ public class EjercicioRutina {
     @Column(name = "IdEjerRutina")
     private Integer idEjerRutina;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id", referencedColumnName = "id")
+    @ManyToOne
+    @JoinColumn(name = "id")
     private Rutina rutina;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "IdEjercicio", referencedColumnName = "IdEjercicio", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "IdEjercicio")
     private Ejercicio ejercicio;
 
     @Column(name = "Repeticiones", nullable = false)

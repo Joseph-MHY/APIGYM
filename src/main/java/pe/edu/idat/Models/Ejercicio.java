@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,6 +28,9 @@ public class Ejercicio {
 
     @Column(name = "NomImagen")
     private String nombreImagen;
+
+    @OneToMany(mappedBy = "ejercicio")
+    private List<EjercicioRutina> ejercicioRutinas;
 
     public Ejercicio(String nombreEjercicio, String descripcionEjercicio, String nombreImagen) {
         this.nombreEjercicio = nombreEjercicio;
