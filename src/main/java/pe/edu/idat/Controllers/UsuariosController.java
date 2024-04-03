@@ -7,16 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.idat.DTO.*;
 import pe.edu.idat.Models.*;
-import pe.edu.idat.Repositories.IConfigTrainingRepository;
-import pe.edu.idat.Repositories.IRutinaRepository;
-import pe.edu.idat.Repositories.IUsuarioConfigurationRepo;
-import pe.edu.idat.Repositories.IUsuarioRutinaRepository;
 import pe.edu.idat.Services.UsuarioService;
 import pe.edu.idat.Utils.Constantes;
-import pe.edu.idat.Utils.TipoUsuario;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
