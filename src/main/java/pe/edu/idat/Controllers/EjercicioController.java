@@ -19,7 +19,7 @@ public class EjercicioController {
         this.ejercicioService = ejercicioService;
     }
 
-    @GetMapping("/{nivel}")
+    @GetMapping("/{nivel}") // Básico, Medio, Avanzado
     public List<EjercicioDTO> getEjerciciosPorNivel(@PathVariable String nivel) {
         return ejercicioService.getEjerciciosPorNivel(nivel);
     }
