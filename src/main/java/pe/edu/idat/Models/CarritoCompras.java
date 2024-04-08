@@ -22,7 +22,7 @@ public class CarritoCompras {
     private String fechaCreacion;
 
     @OneToOne
-    @JoinColumn(name = "correo", referencedColumnName = "correo", insertable = false, updatable = false)
+    @JoinColumn(name = "correo")
     private Usuarios usuario;
 
     public CarritoCompras(String fechaCreacion) {

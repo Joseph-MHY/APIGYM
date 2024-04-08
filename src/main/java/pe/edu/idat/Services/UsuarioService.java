@@ -14,28 +14,32 @@ import org.springframework.http.ResponseEntity;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class UsuarioService {
 
-    private IUsuarioRepository IUsuarioRepository;
+    private IUsuarioRepository iUsuarioRepository;
     private IConfigTrainingRepository iConfigTrainingRepository;
     private IRutinaRepository iRutinaRepository;
     private IUsuarioConfigurationRepo iUsuarioConfigurationRepo;
     private IUsuarioRutinaRepository iUsuarioRutinaRepository;
+    private ICarritoRepository iCarritoRepository;
 
     @Autowired
     public UsuarioService(pe.edu.idat.Repositories.IUsuarioRepository IUsuarioRepository,
                           IConfigTrainingRepository iConfigTrainingRepository,
                           IRutinaRepository iRutinaRepository,
                           IUsuarioConfigurationRepo iUsuarioConfigurationRepo,
-                          IUsuarioRutinaRepository iUsuarioRutinaRepository) {
-        this.IUsuarioRepository = IUsuarioRepository;
+                          IUsuarioRutinaRepository iUsuarioRutinaRepository,
+                          ICarritoRepository iCarritoRepository) {
+        this.iUsuarioRepository = IUsuarioRepository;
         this.iConfigTrainingRepository = iConfigTrainingRepository;
         this.iRutinaRepository = iRutinaRepository;
         this.iUsuarioConfigurationRepo = iUsuarioConfigurationRepo;
         this.iUsuarioRutinaRepository = iUsuarioRutinaRepository;
+        this.iCarritoRepository = iCarritoRepository;
     }
 
     public UsuarioService() {
@@ -43,15 +47,40 @@ public class UsuarioService {
 
     // Metodos para leer usuarios
     public Iterable<Usuarios> findAll() {
-        return IUsuarioRepository.findAll();
+        return iUsuarioRepository.findAll();
     }
 
     public Optional<Usuarios> getUsuarioByEmail(String correo) {
-        return IUsuarioRepository.findByCorreo(correo);
+        return iUsuarioRepository.findByCorreo(correo);
+    }
+
+    public CarritoDTO obtenerCarrito(Integer idCarrito) {
+        Optional<CarritoCompras> optionalCarrito = iCarritoRepository.findById(idCarrito);
+        CarritoCompras carrito = optionalCarrito.orElse(null);
+
+        if (carrito != null) {
+            return new CarritoDTO(carrito);
+        } else {
+            return null;
+        }
+    }
+
+    public CarritoDTO obtenerCarritoporCorreo(String correo) {
+        Usuarios usuario = getUsuarioByEmail(correo).orElse(null);
+        CarritoCompras carrito = iCarritoRepository.findByUsuario(usuario);
+        if (carrito != null) {
+            return new CarritoDTO(
+                    carrito.getIdProdCarrito(),
+                    carrito.getFechaCreacion(),
+                    carrito.getUsuario().getCorreo()
+            );
+        } else {
+            return null; // O podrías lanzar una excepción indicando que no se encontró el carrito
+        }
     }
 
     public List<UsuarioDTO> obtenerUsuarios() {
-        Iterable<Usuarios> usuarios = IUsuarioRepository.findAll();
+        Iterable<Usuarios> usuarios = iUsuarioRepository.findAll();
         List<UsuarioDTO> usuariosDTO = new ArrayList<>();
         for (Usuarios usuario : usuarios) {
             UsuarioDTO usuarioDTO = convertirAUsuarioDTO(usuario);
@@ -61,7 +90,7 @@ public class UsuarioService {
     }
 
     public UsuarioDTO obtenerUsuarioPorCorreo(String correo) {
-        Optional<Usuarios> optionalUsuario = IUsuarioRepository.findByCorreo(correo);
+        Optional<Usuarios> optionalUsuario = iUsuarioRepository.findByCorreo(correo);
         Usuarios usuario = optionalUsuario.orElse(null);
         if (usuario == null) {
             return null;
@@ -150,7 +179,7 @@ public class UsuarioService {
 
         // Automaticamente es Usuario
         usuario.setTipoUsuario(TipoUsuario.Usuario);
-
+        /*
         // Obteniendo la configuracion y rutina del usuarioDTO según el id de estos
         Optional<ConfiguracionEntrenamiento> config = iConfigTrainingRepository.findById(usuarioDTO.getIdconfig());
         Optional<Rutina> rutine = iRutinaRepository.findById(usuarioDTO.getIdRutina());
@@ -183,10 +212,12 @@ public class UsuarioService {
             return ResponseEntity.badRequest().body(response);
         }
 
+         */
+
         //Se crea antes de querer crear un UsuarioConfiguracion
         try {
-            IUsuarioRepository.save(usuario);
-
+            iUsuarioRepository.save(usuario);
+            /*
             UsuarioConfiguracion usuarioConfiguracion = new UsuarioConfiguracion();
             usuarioConfiguracion.setUsuario(usuario);
             usuarioConfiguracion.setConfiguracionEntrenamiento(configuracionEntrenamiento);
@@ -197,6 +228,13 @@ public class UsuarioService {
 
             iUsuarioConfigurationRepo.save(usuarioConfiguracion);
             iUsuarioRutinaRepository.save(usuarioRutina);
+             */
+
+            CarritoCompras carrito = new CarritoCompras();
+            carrito.setIdProdCarrito(null);
+            carrito.setUsuario(usuario);
+            carrito.setFechaCreacion(fechaActualString);
+            iCarritoRepository.save(carrito);
             // Retornar respuesta exitosa
             Map<String, Object> response = new HashMap<>();
             response.put("mensaje", "Usuario creado correctamente");
@@ -223,7 +261,7 @@ public class UsuarioService {
 
 
     public boolean loginUsuario(String correo, String password) {
-        Optional<Usuarios> usuarioOptional = IUsuarioRepository.findById(correo);
+        Optional<Usuarios> usuarioOptional = iUsuarioRepository.findById(correo);
         if (usuarioOptional.isPresent()) {
             Usuarios usuario = usuarioOptional.get();
             // Verificar si la contraseña coincide
@@ -235,7 +273,7 @@ public class UsuarioService {
     public Usuarios postearUsuario(Usuarios usuario){
         if (usuario != null ) {
             usuario.setTipoUsuario(TipoUsuario.Usuario);
-            return IUsuarioRepository.save(usuario);
+            return iUsuarioRepository.save(usuario);
         } else {
             throw new IllegalArgumentException("Tipo de usuario no válido: " + usuario.getTipoUsuario());
         }
@@ -243,7 +281,7 @@ public class UsuarioService {
 
     public Usuarios actualizarPerfil(String correo, Usuarios usuarioModificado) {
 
-        Optional<Usuarios> usuarioOptional = IUsuarioRepository.findById(correo);
+        Optional<Usuarios> usuarioOptional = iUsuarioRepository.findById(correo);
         return usuarioOptional.map(usuario -> {
             // Actualizar los campos del usuario
             usuario.setNombreUsuario(usuarioModificado.getNombreUsuario());
@@ -255,17 +293,17 @@ public class UsuarioService {
             usuario.setFechaNacimiento(usuarioModificado.getFechaNacimiento());
             usuario.setPalabraClave(usuarioModificado.getPalabraClave());
             // Guardar los cambios en la base de datos
-            return IUsuarioRepository.save(usuario);
+            return iUsuarioRepository.save(usuario);
         }).orElse(null);
     }
 
     public Usuarios actualizarpass(String correo, String password) {
-        Optional<Usuarios> usuarioOptional = IUsuarioRepository.findById(correo);
+        Optional<Usuarios> usuarioOptional = iUsuarioRepository.findById(correo);
         return usuarioOptional.map(usuario -> {
             // Actualizar la contraseña del usuario
             usuario.setPassword(password);
             // Guardar los cambios en la base de datos
-            return IUsuarioRepository.save(usuario);
+            return iUsuarioRepository.save(usuario);
         }).orElse(null);
     }
 }

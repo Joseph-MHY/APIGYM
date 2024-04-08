@@ -13,4 +13,7 @@ public interface IProductosRepository extends CrudRepository<Productos, Integer>
 
     @Query(nativeQuery = true, value = "CALL ObtenerProductosPorCategoria(:categoria)")
     List<Object[]> getProductosxCategoria(@Param("categoria") String categoria);
+
+    @Query("SELECT p FROM Productos p WHERE p.nomProducto = :nombre")
+    Productos findByNomProducto(@Param("nombre") String nombre);
 }
