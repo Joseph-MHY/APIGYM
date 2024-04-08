@@ -7,8 +7,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.idat.DTO.*;
 import pe.edu.idat.Models.*;
+import pe.edu.idat.Repositories.ICarritoRepository;
 import pe.edu.idat.Services.UsuarioService;
 import pe.edu.idat.Utils.Constantes;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -19,7 +23,7 @@ public class UsuariosController {
     private UsuarioService usuarioService;
 
     @Autowired
-    public UsuariosController(UsuarioService usuarioService) {
+    public UsuariosController(UsuarioService usuarioService, ICarritoRepository iCarritoRepository) {
         this.usuarioService = usuarioService;
     }
 
@@ -41,9 +45,34 @@ public class UsuariosController {
         return ResponseEntity.ok(usuarioDTO);
     }
 
-    @PostMapping
+    @GetMapping("/carrito/{id}")
+    public CarritoDTO getcarrito(@PathVariable Integer id){
+        return usuarioService.obtenerCarrito(id);
+    }
+
+    @GetMapping("/carritoCorreo/{correo}")
+    public CarritoDTO getcarritoxCorreo(@PathVariable String correo){
+        return usuarioService.obtenerCarritoporCorreo(correo);
+    }
+
+    @PostMapping("/signup")
     public ResponseEntity<Object> postUsuario(@RequestBody UsuarioDTO usuarioDTO) {
-        return usuarioService.postUsuario(usuarioDTO);
+        try {
+            if(usuarioDTO != null){
+                Usuarios userExists = usuarioService.getUsuarioByEmail(usuarioDTO.getCorreo()).orElse(null);
+                if(userExists == null){
+                    usuarioService.postUsuario(usuarioDTO);
+                    return ResponseEntity.accepted().body(Constantes.returnMessageAndObject(Constantes.CREATED_USER, usuarioDTO));
+                } else {
+                    return ResponseEntity.badRequest().body(Constantes.returnMessage(Constantes.ERROR_USER));
+                }
+            } else {
+                return ResponseEntity.badRequest().body("Error al crear el usuario");
+            }
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PostMapping("/login")
@@ -65,24 +94,6 @@ public class UsuariosController {
         } catch (Exception ex) {
             ex.printStackTrace();
             return ResponseEntity.badRequest().body(Collections.singletonMap("mensaje", "Error al procesar la solicitud de inicio de sesión: " + ex.getMessage()));
-        }
-    }
-
-    @PostMapping("/signup")
-    public ResponseEntity<Object> postUser(@RequestBody Usuarios usuario) {
-        try {
-            if(usuario == null){
-                return ResponseEntity.badRequest().body("El usuario no puede ser nulo");
-            }
-            Usuarios nuevoUsuario = usuarioService.postearUsuario(usuario);
-            if(nuevoUsuario != null){
-                return ResponseEntity.accepted().body(Constantes.returnMessageAndObject(Constantes.CREATED_USER, nuevoUsuario));
-            } else {
-                return ResponseEntity.badRequest().body("Error al crear usuario");
-            }
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 

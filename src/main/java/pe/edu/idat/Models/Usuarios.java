@@ -58,6 +58,9 @@ public class Usuarios {
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
     private UsuarioConfiguracion usuarioConfiguracions;
 
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private CarritoCompras carritoCompras;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_usuario", length = 15, nullable = false)
     private TipoUsuario tipoUsuario;

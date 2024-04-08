@@ -10,6 +10,8 @@ public class Constantes {
 
     public static final String CREATED_USER = "Usuario Creado Correctamente";
 
+    public static final String ERROR_USER = "Usuario ya existente";
+
     public static Object returnMessageAndObject(String message, Object object) {
         Map<String, Object> response = new HashMap<>();
         response.put("message", message);
