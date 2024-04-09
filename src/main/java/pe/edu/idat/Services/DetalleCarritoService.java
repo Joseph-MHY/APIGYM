@@ -78,7 +78,6 @@ public class DetalleCarritoService {
             iDetalleRepository.save(detalle);
             Map<String, Object> response = new HashMap<>();
             response.put("mensaje", "Detalle creado correctamente");
-            response.put("Detalle", detalle.toString());
             return ResponseEntity.ok().body(response);
         } catch(Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
