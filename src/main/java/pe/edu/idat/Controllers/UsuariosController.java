@@ -98,19 +98,12 @@ public class UsuariosController {
     }
 
     @GetMapping("/email/{correo}")
-    public ResponseEntity<Object> getUserByEmail(@PathVariable("correo") String correo) {
-        try {
-            Optional<Usuarios> usuarioOptional = usuarioService.getUsuarioByEmail(correo);
-            if (usuarioOptional.isPresent()) {
-                Usuarios usuario = usuarioOptional.get();
-                return ResponseEntity.ok().body(usuario);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return ResponseEntity.badRequest().body("Error al obtener el usuario por correo: " + ex.getMessage());
+    public ResponseEntity<UsuarioDTO> getUserByEmail(@PathVariable("correo") String correo) {
+        UsuarioDTO usuarioDTO = usuarioService.obtenerUsuarioPorCorreo(correo);
+        if (usuarioDTO == null) {
+            return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.ok(usuarioDTO);
     }
 
     @PutMapping("/{correo}")
